@@ -1,0 +1,61 @@
+{
+  "name": "Production",
+  "values": [
+    {
+      "key": "baseUrl",
+      "value": "https://reqres.in/api",
+      "type": "default",
+      "enabled": true,
+      "description": "ReqRes public API base URL (new subdomain as of 2025)"
+    },
+    {
+      "key": "apiKey",
+      "value": "YOUR_REQRES_API_KEY",
+      "type": "secret",
+      "enabled": true,
+      "description": "Get your free key at https://app.reqres.in/api-keys — override via pipeline secret variable REQRES_API_KEY"
+    },
+    {
+      "key": "authToken",
+      "value": "",
+      "type": "secret",
+      "enabled": true,
+      "description": "Bearer token — populated by POST /login test script"
+    },
+    {
+      "key": "firstUserId",
+      "value": "2",
+      "type": "default",
+      "enabled": true,
+      "description": "Seeded default; overwritten by list-users test"
+    },
+    {
+      "key": "createdUserId",
+      "value": "",
+      "type": "default",
+      "enabled": true,
+      "description": "Populated by create-user test"
+    },
+    {
+      "key": "defaultUserEmail",
+      "value": "eve.holt@reqres.in",
+      "type": "default",
+      "enabled": true,
+      "description": "Known good test account"
+    },
+    {
+      "key": "defaultUserPassword",
+      "value": "cityslicka",
+      "type": "secret",
+      "enabled": true,
+      "description": "Known good test password — override via pipeline secret variable"
+    },
+    {
+      "key": "responseTimeThreshold",
+      "value": "2000",
+      "type": "default",
+      "enabled": true,
+      "description": "Max acceptable response time in ms"
+    }
+  ]
+}
