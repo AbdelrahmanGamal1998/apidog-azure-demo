@@ -1,0 +1,326 @@
+{
+  "info": {
+    "_postman_id": "reqres-api-automation-v1",
+    "name": "ReqRes API Automation",
+    "description": "Complete test suite for reqres.in — auth and users",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl",       "value": "https://reqres.in/api", "type": "string" },
+    { "key": "apiKey",        "value": "",                      "type": "string" },
+    { "key": "authToken",     "value": "",                      "type": "string" },
+    { "key": "firstUserId",   "value": "2",                     "type": "string" },
+    { "key": "createdUserId", "value": "",                      "type": "string" }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "var apiKey = pm.environment.get('apiKey') || pm.collectionVariables.get('apiKey');",
+          "if (apiKey) { pm.request.headers.upsert({ key: 'x-api-key', value: apiKey }); }",
+          "var isLogin = pm.request.url.toString().indexOf('/login') !== -1;",
+          "if (!isLogin) {",
+          "  var token = pm.environment.get('authToken');",
+          "  if (token) { pm.request.headers.upsert({ key: 'Authorization', value: 'Bearer ' + token }); }",
+          "}"
+        ]
+      }
+    }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "01 POST /login - valid credentials",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function() { pm.response.to.have.status(200); });",
+                  "pm.test('Response time under 2000ms', function() { pm.expect(pm.response.responseTime).to.be.below(2000); });",
+                  "pm.test('Response has token', function() {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json).to.have.property('token');",
+                  "  pm.expect(json.token).to.be.a('string').and.not.empty;",
+                  "});",
+                  "var token = pm.response.json().token;",
+                  "pm.environment.set('authToken', token);",
+                  "pm.test('Token stored for correlation', function() {",
+                  "  pm.expect(pm.environment.get('authToken')).to.equal(token);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "x-api-key",    "value": "{{apiKey}}" }
+            ],
+            "url": "{{baseUrl}}/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"eve.holt@reqres.in\",\n  \"password\": \"cityslicka\"\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          }
+        },
+        {
+          "name": "02 POST /login - missing password (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 400', function() { pm.response.to.have.status(400); });",
+                  "pm.test('Error field present', function() {",
+                  "  pm.expect(pm.response.json()).to.have.property('error');",
+                  "});",
+                  "pm.test('Error message says missing password', function() {",
+                  "  var error = pm.response.json().error;",
+                  "  pm.expect(error.toLowerCase()).to.include('missing password');",
+                  "});",
+                  "pm.test('No token returned on failed login', function() {",
+                  "  pm.expect(pm.response.json()).to.not.have.property('token');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "x-api-key",    "value": "{{apiKey}}" }
+            ],
+            "url": "{{baseUrl}}/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"peter@klaven\"\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "03 GET /users - list users page 1",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function() { pm.response.to.have.status(200); });",
+                  "pm.test('Pagination fields present', function() {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json).to.have.property('page');",
+                  "  pm.expect(json).to.have.property('per_page');",
+                  "  pm.expect(json).to.have.property('total');",
+                  "  pm.expect(json).to.have.property('data');",
+                  "});",
+                  "pm.test('Data is non-empty array', function() {",
+                  "  pm.expect(pm.response.json().data).to.be.an('array').and.not.empty;",
+                  "});",
+                  "pm.test('Each user has required fields', function() {",
+                  "  pm.response.json().data.forEach(function(u) {",
+                  "    pm.expect(u).to.have.property('id');",
+                  "    pm.expect(u).to.have.property('email');",
+                  "    pm.expect(u).to.have.property('first_name');",
+                  "    pm.expect(u).to.have.property('last_name');",
+                  "  });",
+                  "});",
+                  "pm.environment.set('firstUserId', pm.response.json().data[0].id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "x-api-key", "value": "{{apiKey}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/users?page=1",
+              "query": [{ "key": "page", "value": "1" }]
+            }
+          }
+        },
+        {
+          "name": "04 GET /users/:id - single user",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function() { pm.response.to.have.status(200); });",
+                  "pm.test('User id matches correlated firstUserId', function() {",
+                  "  var expectedId = parseInt(pm.environment.get('firstUserId'));",
+                  "  pm.expect(pm.response.json().data.id).to.equal(expectedId);",
+                  "});",
+                  "pm.test('Email is valid format', function() {",
+                  "  pm.expect(pm.response.json().data.email).to.match(/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "x-api-key", "value": "{{apiKey}}" }],
+            "url": "{{baseUrl}}/users/{{firstUserId}}"
+          }
+        },
+        {
+          "name": "05 GET /users/999 - not found (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 404', function() { pm.response.to.have.status(404); });",
+                  "pm.test('Body is empty object', function() {",
+                  "  pm.expect(pm.response.json()).to.deep.equal({});",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "x-api-key", "value": "{{apiKey}}" }],
+            "url": "{{baseUrl}}/users/999"
+          }
+        },
+        {
+          "name": "06 POST /users - create user",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 201', function() { pm.response.to.have.status(201); });",
+                  "pm.test('Created user has id and createdAt', function() {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json).to.have.property('id');",
+                  "  pm.expect(json).to.have.property('createdAt');",
+                  "  pm.expect(json.name).to.equal('Abdelrahman Gamal');",
+                  "  pm.expect(json.job).to.equal('QA Engineer');",
+                  "});",
+                  "pm.environment.set('createdUserId', pm.response.json().id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "x-api-key",    "value": "{{apiKey}}" }
+            ],
+            "url": "{{baseUrl}}/users",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Abdelrahman Gamal\",\n  \"job\": \"QA Engineer\"\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          }
+        },
+        {
+          "name": "07 PUT /users/2 - full update",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function() { pm.response.to.have.status(200); });",
+                  "pm.test('updatedAt field present', function() {",
+                  "  pm.expect(pm.response.json()).to.have.property('updatedAt');",
+                  "});",
+                  "pm.test('Job reflects update', function() {",
+                  "  pm.expect(pm.response.json().job).to.equal('Senior QA Engineer');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "x-api-key",    "value": "{{apiKey}}" }
+            ],
+            "url": "{{baseUrl}}/users/2",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Abdelrahman Gamal\",\n  \"job\": \"Senior QA Engineer\"\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          }
+        },
+        {
+          "name": "08 PATCH /users/2 - partial update",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function() { pm.response.to.have.status(200); });",
+                  "pm.test('updatedAt field present', function() {",
+                  "  pm.expect(pm.response.json()).to.have.property('updatedAt');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "x-api-key",    "value": "{{apiKey}}" }
+            ],
+            "url": "{{baseUrl}}/users/2",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"job\": \"Lead QA Engineer\"\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          }
+        },
+        {
+          "name": "09 DELETE /users/2 - delete user",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 204', function() { pm.response.to.have.status(204); });",
+                  "pm.test('Body is empty', function() { pm.expect(pm.response.text()).to.be.empty; });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "x-api-key", "value": "{{apiKey}}" }],
+            "url": "{{baseUrl}}/users/2"
+          }
+        }
+      ]
+    }
+  ]
+}
