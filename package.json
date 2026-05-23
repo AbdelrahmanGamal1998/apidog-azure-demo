@@ -1,0 +1,14 @@
+{
+  "name": "apidog-azure-demo",
+  "version": "1.0.0",
+  "description": "ReqRes API automation with Apidog CLI + Azure DevOps",
+  "scripts": {
+    "test":            "apidog run apis/collection.json --environment-file environments/local.json --reporter-html-export reports/report-local.html --bail --verbose",
+    "test:prod":       "apidog run --access-token $APIDOG_ACCESS_TOKEN --project-id $APIDOG_PROJECT_ID --environment Production --report-type html --report-file reports/report-prod.html --bail --verbose",
+    "test:junit":      "apidog run apis/collection.json --environment-file environments/local.json --report-type junit --report-file reports/junit-local.xml --bail",
+    "lint:spec":       "redocly lint apis/openapi.yaml --format=stylish",
+    "preview:spec":    "redocly preview-docs apis/openapi.yaml",
+    "install:tools":   "npm install -g apidog-cli @redocly/cli"
+  },
+  "devDependencies": {}
+}
