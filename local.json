@@ -1,0 +1,57 @@
+{
+  "name": "Local / Development",
+  "values": [
+    {
+      "key": "baseUrl",
+      "value": "https://reqres.in/api",
+      "type": "default",
+      "enabled": true,
+      "description": "ReqRes public API base URL (new subdomain as of 2025)"
+    },
+    {
+      "key": "apiKey",
+      "value": "YOUR_REQRES_API_KEY",
+      "type": "secret",
+      "enabled": true,
+      "description": "Get your free key at https://app.reqres.in/api-keys"
+    },
+    {
+      "key": "authToken",
+      "value": "",
+      "type": "secret",
+      "enabled": true,
+      "description": "Populated at runtime by login test"
+    },
+    {
+      "key": "firstUserId",
+      "value": "2",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "createdUserId",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "defaultUserEmail",
+      "value": "eve.holt@reqres.in",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "defaultUserPassword",
+      "value": "cityslicka",
+      "type": "secret",
+      "enabled": true
+    },
+    {
+      "key": "responseTimeThreshold",
+      "value": "3000",
+      "type": "default",
+      "enabled": true,
+      "description": "Relaxed threshold for local runs"
+    }
+  ]
+}
