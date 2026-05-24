@@ -51,40 +51,15 @@ jobs:
           node-version: '20'
 
       - name: Install apidog-cli
-        run: npm install -g apidog-cli@1.5.23
-
-      - name: Verify apidog-cli version
-        run: apidog --version
-
-      - name: Create reports directory
-        run: mkdir -p reports
-
-      - name: Inject REQRES_API_KEY into environment file
-        run: sed -i 's/YOUR_REQRES_API_KEY/${{ secrets.REQRES_API_KEY }}/g' environments/production.json
+        run: npm install -g apidog-cli
 
       - name: Run API tests
         run: |
-          apidog run apis/collection.json \
-            --environment-file environments/production.json \
-            --reporter-html-export "reports/report-${{ github.run_id }}.html" \
+          apidog run \
+            --access-token "${{ secrets.APIDOG_ACCESS_TOKEN }}" \
+            --project-id "${{ secrets.APIDOG_PROJECT_ID }}" \
             --bail \
             --verbose
-
-      - name: Generate JUnit XML report
-        if: always()
-        run: |
-          apidog run apis/collection.json \
-            --environment-file environments/production.json \
-            --report-type junit \
-            --report-file "reports/junit-${{ github.run_id }}.xml" \
-            --verbose 2>/dev/null || true
-
-      - name: Upload test reports
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: api-test-reports
-          path: reports/
 
       - name: Publish JUnit test results
         if: always()
