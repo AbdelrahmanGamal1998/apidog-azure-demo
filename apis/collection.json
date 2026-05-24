@@ -148,10 +148,7 @@
           "request": {
             "method": "GET",
             "header": [{ "key": "x-api-key", "value": "{{apiKey}}" }],
-            "url": {
-              "raw": "{{baseUrl}}/users?page=1",
-              "query": [{ "key": "page", "value": "1" }]
-            }
+            "url": "{{baseUrl}}/users?page=1"
           }
         },
         {
