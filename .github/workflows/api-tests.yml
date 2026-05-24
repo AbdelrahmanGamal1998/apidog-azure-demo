@@ -46,50 +46,21 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Install apidog-cli
-        run: npm install -g apidog-cli
-
-      - name: Verify apidog-cli
-        run: apidog --version
+      - name: Install Newman
+        run: npm install -g newman newman-reporter-htmlextra
 
       - name: Create reports directory
         run: mkdir -p reports
 
-      - name: Inject REQRES_API_KEY into environment file
-        run: sed -i 's/YOUR_REQRES_API_KEY/${{ secrets.REQRES_API_KEY }}/g' environments/production.json
-
       - name: Run API tests
-        env:
-          APIDOG_ACCESS_TOKEN: ${{ secrets.APIDOG_ACCESS_TOKEN }}
-          APIDOG_PROJECT_ID:   ${{ secrets.APIDOG_PROJECT_ID }}
-          REQRES_API_KEY:      ${{ secrets.REQRES_API_KEY }}
         run: |
-          if [ -n "$APIDOG_PROJECT_ID" ]; then
-            apidog run \
-              --access-token "$APIDOG_ACCESS_TOKEN" \
-              --project-id   "$APIDOG_PROJECT_ID" \
-              --environment  "Production" \
-              --reporter-html-export "reports/report-${{ github.run_id }}.html" \
-              --bail \
-              --verbose
-          else
-            apidog run apis/collection.json \
-              --environment-file environments/production.json \
-              --reporter-html-export "reports/report-${{ github.run_id }}.html" \
-              --bail \
-              --verbose
-          fi
-
-      - name: Generate JUnit XML report
-        if: always()
-        env:
-          REQRES_API_KEY: ${{ secrets.REQRES_API_KEY }}
-        run: |
-          apidog run apis/collection.json \
-            --environment-file environments/production.json \
-            --report-type junit \
-            --report-file "reports/junit-${{ github.run_id }}.xml" \
-            --verbose 2>/dev/null || true
+          newman run apis/collection.json \
+            -e environments/production.json \
+            --env-var "apiKey=${{ secrets.REQRES_API_KEY }}" \
+            --reporters cli,htmlextra,junit \
+            --reporter-htmlextra-export "reports/report-${{ github.run_id }}.html" \
+            --reporter-junit-export "reports/junit-${{ github.run_id }}.xml" \
+            --bail
 
       - name: Upload test reports
         if: always()
@@ -99,7 +70,7 @@ jobs:
           path: reports/
 
       - name: Publish JUnit test results
-        if: always() && hashFiles('reports/junit-*.xml') != ''
+        if: always()
         uses: dorny/test-reporter@v1
         with:
           name: ReqRes API Tests
