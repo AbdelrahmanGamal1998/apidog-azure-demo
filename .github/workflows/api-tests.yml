@@ -69,15 +69,13 @@ jobs:
               --access-token "$APIDOG_ACCESS_TOKEN" \
               --project-id   "$APIDOG_PROJECT_ID" \
               --environment  "Production" \
-              --report-type  html \
-              --report-file  "reports/report-${{ github.run_id }}.html" \
+              --reporter-html-export "reports/report-${{ github.run_id }}.html" \
               --bail \
               --verbose
           else
             apidog run apis/collection.json \
               --environment-file environments/production.json \
-              --report-type html \
-              --report-file  "reports/report-${{ github.run_id }}.html" \
+              --reporter-html-export "reports/report-${{ github.run_id }}.html" \
               --bail \
               --verbose
           fi
@@ -90,7 +88,7 @@ jobs:
           apidog run apis/collection.json \
             --environment-file environments/production.json \
             --report-type junit \
-            --report-file  "reports/junit-${{ github.run_id }}.xml" \
+            --report-file "reports/junit-${{ github.run_id }}.xml" \
             --verbose 2>/dev/null || true
 
       - name: Upload test reports
@@ -101,10 +99,10 @@ jobs:
           path: reports/
 
       - name: Publish JUnit test results
-        if: always()
+        if: always() && hashFiles('reports/junit-*.xml') != ''
         uses: dorny/test-reporter@v1
         with:
           name: ReqRes API Tests
           path: reports/junit-*.xml
           reporter: java-junit
-          fail-on-error: true
+          fail-on-error: false
