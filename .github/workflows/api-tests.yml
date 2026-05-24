@@ -60,18 +60,23 @@ jobs:
             -n 1 \
             -r html,cli,junit
 
+      - name: Find report files
+        if: always()
+        run: find . -name "*.xml" -o -name "*.html" 2>/dev/null | grep -v node_modules || echo "No report files found"
+
       - name: Upload test reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: api-test-reports
-          path: reports/
+          path: .
+          if-no-files-found: warn
 
       - name: Publish JUnit test results
         if: always()
         uses: dorny/test-reporter@v1
         with:
           name: ReqRes API Tests
-          path: reports/*.xml
+          path: '**/*.xml'
           reporter: java-junit
           fail-on-error: false
