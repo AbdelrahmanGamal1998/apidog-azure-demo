@@ -49,16 +49,12 @@ jobs:
       - name: Install apidog-cli
         run: npm install -g apidog-cli
 
-      - name: Run API tests
-        env:
-          APIDOG_ACCESS_TOKEN: ${{ secrets.APIDOG_ACCESS_TOKEN }}
+      - name: Run API tests (local — no cloud)
         run: |
-          apidog run \
-            --access-token $APIDOG_ACCESS_TOKEN \
-            -t 1806656 \
-            -e 6225893 \
-            -n 1 \
-            -r html,cli,junit
+          apidog run "tests/ReqRe Full Suite.apidog-cli.json" \
+            --env-var "apiKey=${{ secrets.REQRES_API_KEY }}" \
+            -r html,cli,junit \
+            --out-dir apidog-reports/
 
       - name: Upload test reports
         if: always()
@@ -74,4 +70,3 @@ jobs:
           report_paths: 'apidog-reports/*.xml'
           fail_on_failure: false
           include_passed: true
-          
