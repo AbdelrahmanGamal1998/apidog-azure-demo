@@ -51,7 +51,7 @@ jobs:
           node-version: '20'
 
       - name: Install apidog-cli
-        run: npm install -g apidog-cli@2.8.31
+        run: npm install -g apidog-cli@1.5.23
 
       - name: Verify apidog-cli version
         run: apidog --version
