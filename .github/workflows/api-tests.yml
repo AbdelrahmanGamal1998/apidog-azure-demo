@@ -17,6 +17,10 @@ on:
       - main
       - develop
 
+permissions:
+  checks: write
+  contents: read
+
 jobs:
   validate:
     name: Validate OpenAPI Spec
@@ -46,21 +50,34 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Install Newman
-        run: npm install -g newman newman-reporter-htmlextra
+      - name: Install apidog-cli
+        run: npm install -g apidog-cli@2.8.31
+
+      - name: Verify apidog-cli version
+        run: apidog --version
 
       - name: Create reports directory
         run: mkdir -p reports
 
+      - name: Inject REQRES_API_KEY into environment file
+        run: sed -i 's/YOUR_REQRES_API_KEY/${{ secrets.REQRES_API_KEY }}/g' environments/production.json
+
       - name: Run API tests
         run: |
-          newman run apis/collection.json \
-            -e environments/production.json \
-            --env-var "apiKey=${{ secrets.REQRES_API_KEY }}" \
-            --reporters cli,htmlextra,junit \
-            --reporter-htmlextra-export "reports/report-${{ github.run_id }}.html" \
-            --reporter-junit-export "reports/junit-${{ github.run_id }}.xml" \
-            --bail
+          apidog run apis/collection.json \
+            --environment-file environments/production.json \
+            --reporter-html-export "reports/report-${{ github.run_id }}.html" \
+            --bail \
+            --verbose
+
+      - name: Generate JUnit XML report
+        if: always()
+        run: |
+          apidog run apis/collection.json \
+            --environment-file environments/production.json \
+            --report-type junit \
+            --report-file "reports/junit-${{ github.run_id }}.xml" \
+            --verbose 2>/dev/null || true
 
       - name: Upload test reports
         if: always()
