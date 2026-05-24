@@ -1,6 +1,7 @@
 name: ReqRes API Tests
 
 on:
+workflow_dispatch:
   push:
     branches:
       - main
